@@ -35,4 +35,11 @@ class UserLoginController {
   static String getRole() {
     return role;
   }
+
+  static void logout() {
+    id = "";
+    username = "";
+    email = "";
+    role = "user";
+  }
 }

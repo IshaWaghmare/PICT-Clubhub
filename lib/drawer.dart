@@ -150,6 +150,7 @@ void _showDialog(BuildContext context) {
           actions: [
             MaterialButton(
               onPressed: () {
+                UserLoginController.logout();
                 Navigator.push(
                     context,
                     MaterialPageRoute(
