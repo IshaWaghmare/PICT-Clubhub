@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +9,34 @@ import 'package:sign_up_in/main_tech.dart';
 import 'package:sign_up_in/sigS.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'drawer.dart';
+import 'config.dart' as config;
+import 'package:http/http.dart' as http;
 
-class Dash extends StatelessWidget {
+class Dash extends StatefulWidget {
   const Dash({Key? key}) : super(key: key);
+
+  @override
+  State<Dash> createState() => _DashState();
+}
+
+class _DashState extends State<Dash> {
+  List<dynamic> events = [];
+  bool isLoding = true;
+
+  Future<void> getEvents() async {
+    var response = await http.get(Uri.parse(config.getEvents));
+    var jsonResponse = jsonDecode(response.body);
+    setState(() {
+      events = (jsonResponse as Map)['events'] as List;
+      isLoding = false;
+    });
+  }
+
+  @override
+  void initState() {
+    getEvents();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,42 +242,57 @@ class Dash extends StatelessWidget {
               const SizedBox(
                 height: 16.0,
               ),
-              UpcomingEventContainer(
-                title: "Engineering 101:",
-                description: "Experience with UI/UX",
-                date: "20th May",
-                time: "11:00 AM",
-                location: "A1-311",
-                imageUrl: "assets/images/s0.jpg",
-                link: "https://www.google.com",
-              ),
-              UpcomingEventContainer(
-                title: "PICT NSS:",
-                description: "Volunteer Recruitment Drive",
-                date: "21st-May, 11.59 pm",
-                time: "11:00 AM",
-                location: "A1-311",
-                imageUrl: "assets/images/nss1.png",
-                link: "https://www.google.com",
-              ),
-              UpcomingEventContainer(
-                title: "GDSC PICT",
-                description: "CodeQuest Trivia Quiz!",
-                date: "29st-May, 6-10 pm",
-                time: "120 min",
-                location: "A1-311",
-                imageUrl: "assets/images/gdsc.jpg",
-                link: "https://www.google.com",
-              ),
-              UpcomingEventContainer(
-                title: "PICTMUN Recruitment drive! 🤩",
-                description: "PICTMUN Recruitment drive! 🤩",
-                date: "25 May",
-                time: "12 Hours remaining",
-                location: "A1-311",
-                imageUrl: "assets/images/mun1.png",
-                link: "https://www.google.com",
-              ),
+              // UpcomingEventContainer(
+              //   title: "Engineering 101:",
+              //   description: "Experience with UI/UX",
+              //   datetime: "20th May, 11:00 AM",
+              //   location: "A1-311",
+              //   imageUrl: "s0.jpg",
+              //   link: "https://www.google.com",
+              // ),
+              // UpcomingEventContainer(
+              //   title: "PICT NSS:",
+              //   description: "Volunteer Recruitment Drive",
+              //   datetime: "21st-May, 11:59 pm",
+              //   location: "A1-311",
+              //   imageUrl: "nss1.png",
+              //   link: "https://www.google.com",
+              // ),
+              // UpcomingEventContainer(
+              //   title: "GDSC PICT",
+              //   description: "CodeQuest Trivia Quiz!",
+              //   datetime: "29st-May, 6-10 pm",
+              //   location: "A1-311",
+              //   imageUrl: "gdsc.jpg",
+              //   link: "https://www.google.com",
+              // ),
+              // UpcomingEventContainer(
+              //   title: "PICTMUN Recruitment drive! 🤩",
+              //   description: "PICTMUN Recruitment drive! 🤩",
+              //   datetime: "25 May, 11:00 AM",
+              //   location: "A1-311",
+              //   imageUrl: "mun1.png",
+              //   link: "https://www.google.com",
+              // ),
+
+              isLoding
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.blue,
+                      ),
+                    )
+                  : Column(
+                      children: events
+                          .map((event) => UpcomingEventContainer(
+                                title: event["title"],
+                                description: event["description"],
+                                datetime: event["datetime"],
+                                location: event["location"],
+                                imageUrl: event["imageUrl"],
+                                link: event["link"],
+                              ))
+                          .toList(),
+                    ),
             ],
           ),
         ),
@@ -262,8 +304,7 @@ class Dash extends StatelessWidget {
 class UpcomingEventContainer extends StatefulWidget {
   final String title;
   final String description;
-  final String date;
-  final String time;
+  final String datetime;
   final String location;
   final String imageUrl;
   final String link;
@@ -273,8 +314,7 @@ class UpcomingEventContainer extends StatefulWidget {
     super.key,
     required this.title,
     required this.description,
-    required this.date,
-    required this.time,
+    required this.datetime,
     required this.location,
     required this.imageUrl,
     required this.link,
@@ -317,9 +357,12 @@ class _UpcomingEventContainerState extends State<UpcomingEventContainer> {
             children: [
               // Show bookmark icon
               Image.asset(
-                widget.imageUrl,
+                "assets/images/${widget.imageUrl}",
                 width: width * 0.6,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.event, size: 40);
+                },
               ),
 
               const SizedBox(width: 10),
@@ -375,7 +418,7 @@ class _UpcomingEventContainerState extends State<UpcomingEventContainer> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${widget.date}, ${widget.time}",
+                widget.datetime,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               Row(

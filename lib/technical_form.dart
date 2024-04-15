@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class TechnicalFormPage extends StatefulWidget {
   @override
@@ -27,6 +30,7 @@ class _TechnicalFormPageState extends State<TechnicalFormPage> {
   String? _eventCategory;
   String _eventInfo = '';
   String _eventLink = '';
+  String _dateTime = '';
   DateTime _eventStartDateTime = DateTime.now();
   DateTime? _eventEndDateTime;
   int? _eventDuration;
@@ -162,6 +166,7 @@ class _TechnicalFormPageState extends State<TechnicalFormPage> {
                 style: const TextStyle(color: Colors.white),
                 onSaved: (value) {
                   // Parse and save start date time here
+                  _dateTime = value!;
                 },
               ),
               Text(
@@ -234,21 +239,34 @@ class _TechnicalFormPageState extends State<TechnicalFormPage> {
     );
   }
 
-  void _submitForm() {
-    // Perform form submission with the entered values
-    // You can access the form field values here and submit them to your backend or perform any other action
-    // For example:
-    print('Event Name: $_eventName');
-    print('Event Category: $_eventCategory');
-    print('Event Info: $_eventInfo');
-    print('Event Link: $_eventLink');
-    print('Event Venue: $_eventVenue');
-    if (_eventImage != null) {
-      print('Event Image Path: ${_eventImage!.path}');
-    }
-    // Print other form field values...
+  void _submitForm() async {
+    String imageUrl = '';
 
-    // After submission, you can navigate back to the previous screen or perform any other action
-    Navigator.pop(context); // Navigate back to previous screen
+    if (_eventImage != null) {
+      imageUrl = _eventImage!.path.split('/').last;
+    }
+
+    var requestBody = {
+      "title": _eventName,
+      "description": _eventInfo,
+      "datetime": _dateTime,
+      "location": _eventVenue,
+      "imageUrl": imageUrl,
+      "link": _eventLink,
+    };
+
+    print('Request Body: $requestBody');
+
+    var response = await http.post(
+      Uri.parse(createEvent),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    print('Response: ${response.body}');
+
+    Navigator.pop(context);
   }
 }
